@@ -1,5 +1,6 @@
 // 必要なモジュールを読み込み
 import * as THREE from "../lib/three.module.js";
+import { OrbitControls } from "../lib/OrbitControls.js";
 
 // DOM がパースされたことを検出するイベントで App3 クラスをインスタンス化する
 window.addEventListener(
@@ -38,7 +39,7 @@ class App3 {
    */
   static get RENDERER_PARAM() {
     return {
-      clearColor: 0xE3D7BF,
+      clearColor: 0xe3d7bf,
       width: window.innerWidth,
       height: window.innerHeight,
     };
@@ -107,13 +108,19 @@ class App3 {
     this.camera; // カメラ
     this.directionalLight; // ディレクショナルライト
     this.ambientLight; // アンビエントライト
-    this.BoxGeometry; // トーラスジオメトリ
     this.texture = []; // テクスチャ
     this.geometry;
     this.planeArray = [];
     this.materialArray = [];
     this.material;
     this.mesh;
+    this.getViewSizeAtDepth = (depth = 0) => {
+      const fovInRadians = (this.camera.fov * Math.PI) / 180;
+      const height = Math.abs(
+        (this.camera.position.z - depth) * Math.tan(fovInRadians / 2) * 2
+      );
+      return { width: height * this.camera.aspect, height };
+    };
 
     // 再帰呼び出しのための this 固定
     this.render = this.render.bind(this);
@@ -134,14 +141,7 @@ class App3 {
    * アセット（素材）のロードを行う Promise
    */
   load() {
-    const imagePath = [
-      "./01.jpg",
-      "./02.jpg",
-      "./03.jpg",
-      "./04.jpg",
-      "./05.jpg",
-      "./06.jpg",
-    ];
+    const imagePath = ["./01.jpg", "./01.jpg", "./03.jpg"];
 
     return new Promise((resolve) => {
       const loader = new THREE.TextureLoader();
@@ -175,11 +175,12 @@ class App3 {
 
     // カメラ
     this.camera = new THREE.PerspectiveCamera(
-      35,
-      App3.CAMERA_PARAM.aspect,
-      0.1,
+      70,
+      window.innerWidth / window.innerHeight,
+      0.001,
       1000
     );
+    this.camera.position.set(0, 0, 2);
     this.camera.lookAt(App3.CAMERA_PARAM.lookAt);
 
     // ディレクショナルライト（平行光源）
@@ -220,12 +221,22 @@ class App3 {
       }
     }
 
-    for (let i = 0; i < 6; i++) {
-      this.geometry = new THREE.PlaneGeometry(5, 8, 50, 50);
+    for (let i = 0; i < 3; i++) {
+      let viewSize = this.getViewSizeAtDepth();
+      this.geometry = new THREE.PlaneGeometry(
+        viewSize.width,
+        viewSize.height,
+        2,
+        2
+      );
       let uniforms = {
         uTexture: { value: this.texture[i] },
-        uImageAspect: { value: this.texture[i].source.data.naturalWidth / this.texture[i].source.data.naturalHeight }, //画像のアスペクト
-        uPlaneAspect: { value: 5 / 8 }, 
+        uImageAspect: {
+          value:
+            this.texture[i].source.data.naturalWidth /
+            this.texture[i].source.data.naturalHeight,
+        }, //画像のアスペクト
+        uPlaneAspect: { value: 8 / 5 },
         uTime: { value: 0 },
       };
       this.material = new THREE.ShaderMaterial({
@@ -239,33 +250,12 @@ class App3 {
       this.scene.add(this.planeArray[i]);
     }
 
-    this.camera.position.z = 40;
-
     let speed = 0;
     let rotation = 0;
-
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     window.addEventListener("wheel", (event) => {
       speed += event.deltaY * 0.0002;
     });
-
-    const rot = () => {
-      rotation += speed;
-      speed *= 0.93;
-      const mathPositionRatio = (plane, multi) => {
-        plane.position.x =
-          12 * Math.cos(rotation + multi * (Math.PI / 3) + Math.PI / 6);
-        plane.position.z =
-          12 * Math.sin(rotation + multi * (Math.PI / 3) + Math.PI / 6);
-      };
-      let num = 1;
-      this.planeArray.forEach((plane, index) => {
-        mathPositionRatio(plane, index + num);
-        plane.material.uniforms.uTime.value++;
-      });
-      window.requestAnimationFrame(rot);
-    };
-
-    rot();
   }
 
   /**
