@@ -1,11 +1,17 @@
+precision mediump float;
+
+// #pragma glslify: noise2 = require(glsl-noise/simplex/2d);
+// #pragma glslify: noise3 = require(glsl-noise/simplex/3d);
+
 varying vec2 vUv;
-uniform sampler2D uTexture;
-uniform float uImageAspect;
-uniform float uPlaneAspect;
-uniform float uTime;
+uniform sampler2D uTexCurrent;
+uniform sampler2D uTexNext;
+uniform float uProgress;
+
 
 void main() {
-// オフスクリーンレンダリングの結果をまず取り出す
-  vec3 color = texture2D( uTexture, vUv ).rgb;
-  gl_FragColor = vec4( color, 1.0 ); // gl_FragColor に vec4 型（rgba）の色を入れることでピクセル色を決定する。
+
+  vec4 texCurrent = texture(uTexCurrent, vUv);
+  vec4 texNext = texture(uTexNext, vUv);
+  gl_FragColor = mix(texCurrent, texNext, uProgress);
 }

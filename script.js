@@ -1,6 +1,7 @@
 // 必要なモジュールを読み込み
 import * as THREE from "../lib/three.module.js";
 import { OrbitControls } from "../lib/OrbitControls.js";
+import { GUI } from "https://unpkg.com/three@0.127.0/examples/jsm/libs/dat.gui.module.js";
 
 // DOM がパースされたことを検出するイベントで App3 クラスをインスタンス化する
 window.addEventListener(
@@ -141,7 +142,7 @@ class App3 {
    * アセット（素材）のロードを行う Promise
    */
   load() {
-    const imagePath = ["./01.jpg", "./01.jpg", "./03.jpg"];
+    const imagePath = ["./01.jpg", "./02.jpg", "./03.jpg"];
 
     return new Promise((resolve) => {
       const loader = new THREE.TextureLoader();
@@ -221,38 +222,33 @@ class App3 {
       }
     }
 
-    for (let i = 0; i < 3; i++) {
       let viewSize = this.getViewSizeAtDepth();
       this.geometry = new THREE.PlaneGeometry(
         viewSize.width,
         viewSize.height,
-        2,
-        2
       );
-      let uniforms = {
-        uTexture: { value: this.texture[i] },
-        uImageAspect: {
-          value:
-            this.texture[i].source.data.naturalWidth /
-            this.texture[i].source.data.naturalHeight,
-        }, //画像のアスペクト
-        uPlaneAspect: { value: 8 / 5 },
-        uTime: { value: 0 },
+      let uniforms =  {
+        uTexCurrent: { value: this.texture[0] },
+        uTexNext: { value: this.texture[1] },
+        uTick: { value: 0 },
+        uProgress: { value: 0 },
+        uNoiseScale: { value: new THREE.Vector2(10, 10) }
       };
       this.material = new THREE.ShaderMaterial({
         uniforms,
         vertexShader: loadFile("./shader.vert"),
         fragmentShader: loadFile("./shader.frag"),
       });
-      this.materialArray.push(this.material);
-      this.mesh = new THREE.Mesh(this.geometry, this.materialArray[i]);
-      this.planeArray.push(this.mesh);
-      this.scene.add(this.planeArray[i]);
-    }
+      this.mesh = new THREE.Mesh(this.geometry, this.material);
+      this.scene.add(this.mesh);
+
+    const gui = new GUI({ width: 300 });
+    gui.open();
+    gui.add(this.material.uniforms.uProgress, "value", 0, 1, 0.1);
 
     let speed = 0;
     let rotation = 0;
-    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     window.addEventListener("wheel", (event) => {
       speed += event.deltaY * 0.0002;
     });
