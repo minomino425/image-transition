@@ -8,7 +8,6 @@ uniform sampler2D uTexCurrent;
 uniform sampler2D uTexNext;
 uniform float uProgress;
 
-
 void main() {
 
   vec4 texCurrent = texture(uTexCurrent, vUv);

@@ -2,6 +2,7 @@
 import * as THREE from "../lib/three.module.js";
 import { OrbitControls } from "../lib/OrbitControls.js";
 import { GUI } from "https://unpkg.com/three@0.127.0/examples/jsm/libs/dat.gui.module.js";
+import { gsap } from "../node_modules/gsap/gsap-core.js";
 
 // DOM がパースされたことを検出するイベントで App3 クラスをインスタンス化する
 window.addEventListener(
@@ -222,30 +223,38 @@ class App3 {
       }
     }
 
-      let viewSize = this.getViewSizeAtDepth();
-      this.geometry = new THREE.PlaneGeometry(
-        viewSize.width,
-        viewSize.height,
-      );
-      let uniforms =  {
-        uTexCurrent: { value: this.texture[0] },
-        uTexNext: { value: this.texture[1] },
-        uTick: { value: 0 },
-        uProgress: { value: 0 },
-        uNoiseScale: { value: new THREE.Vector2(10, 10) }
-      };
-      this.material = new THREE.ShaderMaterial({
-        uniforms,
-        vertexShader: loadFile("./shader.vert"),
-        fragmentShader: loadFile("./shader.frag"),
-      });
-      this.mesh = new THREE.Mesh(this.geometry, this.material);
-      this.scene.add(this.mesh);
+    let viewSize = this.getViewSizeAtDepth();
+    this.geometry = new THREE.PlaneGeometry(viewSize.width, viewSize.height);
+    let uniforms = {
+      uTexCurrent: { value: this.texture[0] },
+      uTexNext: { value: this.texture[1] },
+      uTick: { value: 0 },
+      uProgress: { value: 0 },
+      uNoiseScale: { value: new THREE.Vector2(10, 10) },
+    };
+    this.material = new THREE.ShaderMaterial({
+      uniforms,
+      vertexShader: loadFile("./shader.vert"),
+      fragmentShader: loadFile("./shader.frag"),
+    });
+    this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.scene.add(this.mesh);
 
     const gui = new GUI({ width: 300 });
     gui.open();
-    gui.add(this.material.uniforms.uProgress, "value", 0, 1, 0.1);
-
+    gui.add(this.material.uniforms.uNoiseScale.value, "x", 0, 100, 1);
+    gui.add(this.material.uniforms.uNoiseScale.value, "y", 0, 100, 1);
+    gui
+      .add(this.material.uniforms.uProgress, "value", 0, 1, 0.1)
+      .name("progress").listen();
+    const datData = { next: !!this.material.uniforms.uProgress.value };
+    gui.add(datData, "next").onChange(() => {
+      gsap.to(this.material.uniforms.uProgress, {
+        value: +datData.next, //+で数値に変換
+        duration: 1.5,
+        ease: "power3.inOut",
+      });
+    });
     let speed = 0;
     let rotation = 0;
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
