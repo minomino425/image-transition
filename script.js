@@ -249,18 +249,14 @@ class App3 {
       .name("progress")
       .listen();
 
-
     const tl = gsap.timeline({
       repeat: -1,
-      repeatDelay: 0.3, 
       yoyo: true,
+      repeatDelay: 1.5,
+      delay: 1,
     });
 
-    tl.from(this.material.uniforms.uProgress, {
-      value: 0,
-      duration: 1.5,
-      ease: "power3.inOut",
-    }).to(this.material.uniforms.uProgress, {
+    tl.to(this.material.uniforms.uProgress, {
       value: 1,
       duration: 1.5,
       ease: "power3.inOut",
