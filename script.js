@@ -2,7 +2,7 @@
 import * as THREE from "../lib/three.module.js";
 import { OrbitControls } from "../lib/OrbitControls.js";
 import { GUI } from "https://unpkg.com/three@0.127.0/examples/jsm/libs/dat.gui.module.js";
-import { gsap } from "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js";
+import { gsap } from "../node_modules/gsap/gsap-core.js";
 
 // DOM がパースされたことを検出するイベントで App3 クラスをインスタンス化する
 window.addEventListener(
