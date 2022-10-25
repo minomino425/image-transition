@@ -230,7 +230,7 @@ class App3 {
       uTexNext: { value: this.texture[1] },
       uTick: { value: 0 },
       uProgress: { value: 0 },
-      uNoiseScale: { value: new THREE.Vector2(10, 10) },
+      uNoiseScale: { value: new THREE.Vector2(4, 4) },
     };
     this.material = new THREE.ShaderMaterial({
       uniforms,
@@ -246,20 +246,24 @@ class App3 {
     gui.add(this.material.uniforms.uNoiseScale.value, "y", 0, 100, 1);
     gui
       .add(this.material.uniforms.uProgress, "value", 0, 1, 0.1)
-      .name("progress").listen();
-    const datData = { next: !!this.material.uniforms.uProgress.value };
-    gui.add(datData, "next").onChange(() => {
-      gsap.to(this.material.uniforms.uProgress, {
-        value: +datData.next, //+で数値に変換
-        duration: 1.5,
-        ease: "power3.inOut",
-      });
+      .name("progress")
+      .listen();
+
+
+    const tl = gsap.timeline({
+      repeat: -1,
+      repeatDelay: 0.3, 
+      yoyo: true,
     });
-    let speed = 0;
-    let rotation = 0;
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    window.addEventListener("wheel", (event) => {
-      speed += event.deltaY * 0.0002;
+
+    tl.from(this.material.uniforms.uProgress, {
+      value: 0,
+      duration: 1.5,
+      ease: "power3.inOut",
+    }).to(this.material.uniforms.uProgress, {
+      value: 1,
+      duration: 1.5,
+      ease: "power3.inOut",
     });
   }
 
